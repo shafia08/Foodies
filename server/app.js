@@ -9,6 +9,13 @@ var index = require('./routes/index');
 var users = require('./routes/users');
 var restaurant = require('./routes/restaurant');
 
+var passport = require('passport');
+var LocalStrategy = require('passport-local').Strategy;
+var connectflash = require('connect-flash');
+
+
+var registerUser = require('./models/users');
+
 var app = express();
 
 var mongoose = require('mongoose');
@@ -34,9 +41,38 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use(require('serve-static')(__dirname + '/../../public'));
+app.use(require('cookie-parser')());
+app.use(require('body-parser').urlencoded({ extended: true }));
+app.use(require('express-session')({ secret: 'keyboard cat', resave: true, saveUninitialized: true }));
+app.use(passport.initialize());
+app.use(passport.session());
+ 
+
 app.use('/', index);
 app.use('/users', users);
 app.use('/restaurant', restaurant);
+
+
+passport.use(new LocalStrategy(
+  function(username, password, done) {
+    registerUser.findOne({ username: username, password: password }, function (err, user) {
+      if (err) { return done(err); }
+      if (!user) { return done(null, false); }
+    
+      return done(null, user);
+    });
+  }
+));
+passport.serializeUser(function(user, done) {
+  done(null, user.id);
+});
+
+  passport.deserializeUser(function(id, done) {
+registerUser.findById(id, function (err, user) {
+    done(err, user);
+  });
+});
 
 
 // catch 404 and forward to error handler

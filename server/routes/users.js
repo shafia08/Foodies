@@ -1,5 +1,6 @@
 var express = require('express');
 var router = express.Router();
+var passport = require('passport');
 
 var users = require('../models/users');
 
@@ -24,5 +25,12 @@ router.post('/register', function(req, res)
     }
   }); //end of save function
 }); //end of post route insert
+
+
+router.post('/login', passport.authenticate('local', { failureRedirect: '/login' }), function(req, res) {
+    
+    res.send("succesfully logged in");
+});
+
 
 module.exports = router;
